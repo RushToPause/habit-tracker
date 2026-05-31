@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>习惯打卡</title>
-  <!-- PWA 支持 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="习惯打卡">
@@ -23,7 +22,6 @@
       -webkit-tap-highlight-color: transparent;
       padding-bottom: calc(60px + var(--safe-bottom));
     }
-    /* 头部导航 */
     .tabs {
       display: flex;
       background: white;
@@ -41,10 +39,7 @@
       position: relative;
       cursor: pointer;
     }
-    .tab.active {
-      color: var(--theme);
-      font-weight: bold;
-    }
+    .tab.active { color: var(--theme); font-weight: bold; }
     .tab.active::after {
       content: '';
       position: absolute;
@@ -56,15 +51,13 @@
       border-radius: 2px;
     }
 
-    /* 视图容器 */
     .view { display: none; padding: 12px; }
     .view.active { display: block; }
 
-    /* 打卡卡片 */
     .card {
       background: white;
       border-radius: 14px;
-      padding: 16px;
+      padding: 14px;
       margin-bottom: 12px;
       display: flex;
       align-items: center;
@@ -75,28 +68,22 @@
     .card-info { flex: 1; }
     .card-name { font-size: 18px; font-weight: bold; color: #333; }
     .card-progress { font-size: 14px; color: #666; margin: 4px 0; }
-    .card-bar {
-      height: 8px;
-      background: #e0e0e0;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .card-bar-inner {
-      height: 100%;
-      background: var(--theme);
-      transition: width 0.2s;
-    }
+    .card-bar { height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+    .card-bar-inner { height: 100%; transition: width 0.2s; }
+    .card-btns { display: flex; gap: 6px; margin-left: 10px; }
     .card-btn {
-      background: var(--theme);
       color: white;
       border: none;
-      border-radius: 20px;
-      padding: 10px 18px;
-      font-size: 14px;
-      margin-left: 12px;
-      white-space: nowrap;
+      border-radius: 18px;
+      width: 40px;
+      height: 36px;
+      font-size: 18px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .card-btn:active { opacity: 0.8; }
 
     .add-btn {
       display: block;
@@ -113,7 +100,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
-    /* 日历 */
     .cal-header {
       display: flex;
       justify-content: space-between;
@@ -156,150 +142,104 @@
     .cal-day.today { background: #e8f5e9; }
     .cal-day.today .day-num { color: var(--theme); font-weight: bold; }
     .day-num { color: #333; }
-    .day-dots {
-      display: flex;
-      gap: 2px;
-      margin-top: 2px;
-    }
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-    }
+    .day-dots { display: flex; gap: 2px; margin-top: 2px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; }
 
-    /* 设置 */
     .setting-group { margin-bottom: 24px; }
     .setting-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; }
-    .color-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+    .color-options { display: flex; flex-wrap: wrap; gap: 12px; }
     .color-block {
-      width: 44px;
-      height: 44px;
-      border-radius: 22px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 3px solid transparent;
-      transition: transform 0.15s;
+      width: 32px; height: 32px; border-radius: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid transparent; transition: transform 0.15s;
     }
     .color-block.selected { border-color: #333; transform: scale(1.15); }
-    .color-check { color: white; font-size: 20px; }
+    .color-check { color: white; font-size: 16px; }
     .habit-setting-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: white;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px; background: white; border-radius: 10px;
+      margin-bottom: 8px; cursor: pointer;
     }
-    .habit-color-dot {
-      width: 14px; height: 14px; border-radius: 50%; margin-right: 10px;
-      display: inline-block; vertical-align: middle;
-    }
+    .habit-color-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; display: inline-block; vertical-align: middle; }
 
-    /* 弹窗 */
     .mask {
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.4);
-      z-index: 100;
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.4); z-index: 100;
     }
     .dialog {
-      position: fixed;
-      left: 20px;
-      right: 20px;
-      top: 15%;
-      background: white;
-      border-radius: 20px;
-      padding: 24px 20px;
-      z-index: 101;
-      max-height: 75vh;
-      overflow-y: auto;
+      position: fixed; left: 20px; right: 20px; top: 10%;
+      background: white; border-radius: 20px; padding: 20px;
+      z-index: 101; max-height: 80vh; overflow-y: auto;
       box-shadow: 0 8px 30px rgba(0,0,0,0.2);
     }
-    .dialog-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 20px; }
-    .form-item { margin-bottom: 16px; }
+    .dialog-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 16px; }
+    .form-item { margin-bottom: 14px; }
     .form-item label { font-size: 14px; color: #666; display: block; margin-bottom: 4px; }
-    .form-item input {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      height: 44px;
-      padding: 0 12px;
-      width: 100%;
-      font-size: 16px;
-      background: #fafafa;
+    .form-item input, .form-item textarea {
+      border: 1px solid #ddd; border-radius: 10px; padding: 0 12px;
+      width: 100%; font-size: 16px; background: #fafafa;
     }
+    .form-item input { height: 44px; }
+    .form-item textarea { height: 60px; padding: 8px 12px; resize: vertical; }
     .form-row { display: flex; gap: 12px; }
     .form-row .form-item { flex: 1; }
-    .weekday-select { display: flex; flex-wrap: wrap; gap: 10px; }
-    .weekday-select label { display: flex; align-items: center; gap: 4px; font-size: 14px; cursor: pointer; }
+
+    .repeat-mode { display: flex; gap: 10px; margin-bottom: 10px; }
+    .mode-btn {
+      flex: 1; height: 36px; border-radius: 18px; border: 1px solid #ccc;
+      background: white; font-size: 14px; cursor: pointer; text-align: center; line-height: 34px;
+    }
+    .mode-btn.active { background: var(--theme); color: white; border-color: var(--theme); }
+
+    .weekday-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .weekday-btn {
+      width: 38px; height: 38px; border-radius: 50%; border: 1px solid #ddd;
+      background: white; font-size: 14px; cursor: pointer; text-align: center; line-height: 36px;
+    }
+    .weekday-btn.selected { background: var(--theme); color: white; border-color: var(--theme); }
+
     .dialog-btns { display: flex; gap: 12px; margin-top: 20px; }
     .dialog-btns button {
-      flex: 1;
-      height: 44px;
-      border-radius: 22px;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
+      flex: 1; height: 44px; border-radius: 22px; border: none;
+      font-size: 16px; cursor: pointer;
     }
     .cancel-btn { background: #f0f0f0; color: #666; }
     .confirm-btn { background: var(--theme); color: white; }
     .delete-btn { background: #ff5252; color: white; }
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
     .detail-actions { display: flex; align-items: center; gap: 10px; }
     .action-btn {
-      width: 36px; height: 36px; border-radius: 18px;
-      border: none; font-size: 18px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 18px; border: none;
+      font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .action-btn.minus { background: #ffcdd2; color: #c62828; }
     .action-btn.plus { background: #c8e6c9; color: #2e7d32; }
     .detail-count { min-width: 80px; text-align: center; font-size: 14px; color: #666; }
-
     .empty-tip { text-align: center; color: #999; margin-top: 60px; }
   </style>
 </head>
 <body>
-
-  <!-- 顶部标签 -->
   <div class="tabs">
     <div class="tab active" data-view="check">打卡</div>
     <div class="tab" data-view="calendar">日历</div>
     <div class="tab" data-view="settings">设置</div>
   </div>
 
-  <!-- 打卡视图 -->
   <div id="view-check" class="view active"></div>
-
-  <!-- 日历视图 -->
   <div id="view-calendar" class="view"></div>
-
-  <!-- 设置视图 -->
   <div id="view-settings" class="view">
     <div class="setting-group">
       <div class="setting-title">🎨 主题颜色</div>
       <div class="color-options" id="themeColors"></div>
     </div>
     <div class="setting-group">
-      <div class="setting-title">📋 管理习惯（长按编辑）</div>
+      <div class="setting-title">📋 管理习惯（点击或长按编辑）</div>
       <div id="habitListSettings"></div>
       <button class="add-btn" id="addHabitSettings">＋ 添加新习惯</button>
     </div>
   </div>
 
-  <!-- 弹窗：添加/编辑习惯 -->
+  <!-- 编辑习惯弹窗 -->
   <div class="mask" id="dialogMask" style="display:none"></div>
   <div class="dialog" id="habitDialog" style="display:none">
     <div class="dialog-title" id="dialogTitle">添加习惯</div>
@@ -307,7 +247,7 @@
     <div class="form-item"><label>单位</label><input id="inputUnit" placeholder="杯、毫升..."></div>
     <div class="form-row">
       <div class="form-item"><label>步长</label><input type="number" id="inputStep" value="1"></div>
-      <div class="form-item"><label>目标</label><input type="number" id="inputGoal" value="8"></div>
+      <div class="form-item"><label>每日目标</label><input type="number" id="inputGoal" value="8"></div>
     </div>
     <div class="form-item">
       <label>颜色</label>
@@ -315,8 +255,21 @@
       <input type="hidden" id="inputColor" value="#4CAF50">
     </div>
     <div class="form-item">
-      <label>重复星期</label>
-      <div class="weekday-select" id="weekdaySelect"></div>
+      <label>备注</label>
+      <textarea id="inputNote" placeholder="私人备忘，可选填"></textarea>
+    </div>
+    <div class="form-item">
+      <label>重复方式</label>
+      <div class="repeat-mode" id="repeatModeSelect">
+        <div class="mode-btn active" data-mode="weekly">按星期</div>
+        <div class="mode-btn" data-mode="interval">每隔几天</div>
+      </div>
+      <div id="weeklyOptions">
+        <div class="weekday-btns" id="weekdayBtns"></div>
+      </div>
+      <div id="intervalOptions" style="display:none; margin-top:8px;">
+        <label>每隔 <input type="number" id="inputInterval" value="2" min="1" style="width:60px;display:inline;"> 天</label>
+      </div>
     </div>
     <div class="dialog-btns">
       <button class="cancel-btn" id="btnCancel">取消</button>
@@ -325,7 +278,7 @@
     </div>
   </div>
 
-  <!-- 弹窗：日期详情 -->
+  <!-- 日期详情弹窗 -->
   <div class="mask" id="dayMask" style="display:none"></div>
   <div class="dialog" id="dayDialog" style="display:none">
     <div class="dialog-title" id="dayDialogTitle"></div>
@@ -335,9 +288,14 @@
 
   <script>
     (function(){
-      // ---------- 数据管理 ----------
       const STORAGE_KEY = 'habit_data';
-      const PRESET_COLORS = ['#4CAF50','#2196F3','#FF9800','#E91E63','#9C27B0','#607D8B','#FF5722','#009688'];
+      // 30种颜色
+      const PRESET_COLORS = [
+        '#4CAF50','#2196F3','#FF9800','#E91E63','#9C27B0','#607D8B','#FF5722','#009688',
+        '#795548','#CDDC39','#00BCD4','#8BC34A','#FFC107','#03A9F4','#673AB7','#F44336',
+        '#3F51B5','#009688','#FFEB3B','#FF9800','#795548','#9E9E9E','#00E676','#FF4081',
+        '#536DFE','#FF6E40','#1DE9B6','#FFD740','#7C4DFF','#B2FF59'
+      ];
       const WEEK_LABELS = ['日','一','二','三','四','五','六'];
 
       function getToday() {
@@ -356,18 +314,23 @@
       }
 
       let appData = loadData();
-      // 确保结构完整
-      if (!appData.habits) appData.habits = [];
-      if (!appData.history) appData.history = {};
-      if (!appData.theme) appData.theme = '#4CAF50';
+      // 数据兼容与升级
+      appData.habits = appData.habits || [];
+      appData.habits.forEach(h => {
+        if (!h.repeatMode) h.repeatMode = 'weekly';
+        if (h.repeatMode === 'weekly' && !h.daysOfWeek) h.daysOfWeek = [0,1,2,3,4,5,6];
+        if (h.repeatMode === 'interval' && !h.intervalDays) h.intervalDays = 1;
+        if (!h.createdDate) h.createdDate = getToday(); // 大致补上
+        if (!h.note) h.note = '';
+        if (!h.todayCount) h.todayCount = 0;
+      });
+      appData.history = appData.history || {};
+      appData.theme = appData.theme || '#4CAF50';
 
-      // 每日重置检查
       function checkDateReset() {
         const today = getToday();
         const lastDate = localStorage.getItem('habit_lastDate');
         if (lastDate !== today) {
-          // 保存昨日数据到history（如果存在未保存的todayCount，已经在打卡时写入history）
-          // 重置所有习惯的todayCount为今天的历史值
           appData.habits.forEach(h => {
             const todayHistory = (appData.history[today] && appData.history[today][h.id]) || 0;
             h.todayCount = todayHistory;
@@ -378,15 +341,13 @@
       }
       checkDateReset();
 
-      // 应用主题色
       function applyTheme(color) {
         document.documentElement.style.setProperty('--theme', color);
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
       }
       applyTheme(appData.theme);
 
       // ---------- 视图切换 ----------
-      let currentEditingId = null; // 正在编辑的习惯id
+      let currentEditingId = null;
       let currentCalendarYear, currentCalendarMonth;
 
       function switchView(viewName) {
@@ -403,16 +364,25 @@
         tab.addEventListener('click', () => switchView(tab.dataset.view));
       });
 
-      // ---------- 打卡视图 ----------
-      function getFilteredHabits() {
+      // ---------- 判断习惯今天是否应该出现 ----------
+      function shouldShowToday(habit) {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // 0=周日
-        return appData.habits.filter(h => {
-          if (!h.daysOfWeek || h.daysOfWeek.length === 0) return false;
-          return h.daysOfWeek.includes(dayOfWeek);
-        });
+        if (habit.repeatMode === 'weekly') {
+          const dayOfWeek = today.getDay();
+          return habit.daysOfWeek && habit.daysOfWeek.includes(dayOfWeek);
+        } else if (habit.repeatMode === 'interval') {
+          const created = new Date(habit.createdDate);
+          const diffDays = Math.floor((today - created) / (1000 * 60 * 60 * 24));
+          return diffDays % habit.intervalDays === 0;
+        }
+        return false;
       }
 
+      function getFilteredHabits() {
+        return appData.habits.filter(h => shouldShowToday(h));
+      }
+
+      // ---------- 打卡视图 ----------
       function renderCheck() {
         const container = document.getElementById('view-check');
         const habits = getFilteredHabits();
@@ -426,11 +396,14 @@
           html += `
             <div class="card" data-id="${h.id}" data-longpress="edit">
               <div class="card-info">
-                <div class="card-name">${escapeHtml(h.name)}</div>
+                <div class="card-name">${escapeHtml(h.name)}${h.note ? ' <small style="color:#888;font-weight:normal;">(' + escapeHtml(h.note) + ')</small>' : ''}</div>
                 <div class="card-progress">${h.todayCount} / ${h.dailyGoal} ${escapeHtml(h.unit)}</div>
                 <div class="card-bar"><div class="card-bar-inner" style="width:${pct}%; background:${h.color || appData.theme}"></div></div>
               </div>
-              <button class="card-btn" style="background:${h.color || appData.theme}" data-action="add" data-id="${h.id}">+${h.step}${escapeHtml(h.unit)}</button>
+              <div class="card-btns">
+                <button class="card-btn" style="background:${h.color || appData.theme}" data-action="minus" data-id="${h.id}">-${h.step}</button>
+                <button class="card-btn" style="background:${h.color || appData.theme}" data-action="add" data-id="${h.id}">+${h.step}</button>
+              </div>
             </div>`;
         });
         html += '<button class="add-btn" id="addHabitCheck">＋ 添加新习惯</button>';
@@ -442,8 +415,13 @@
         document.querySelectorAll('[data-action="add"]').forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const id = btn.dataset.id;
-            addCount(id);
+            addCount(btn.dataset.id);
+          });
+        });
+        document.querySelectorAll('[data-action="minus"]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            subtractCount(btn.dataset.id);
           });
         });
         document.getElementById('addHabitCheck')?.addEventListener('click', () => openHabitDialog(null));
@@ -451,13 +429,10 @@
         document.querySelectorAll('[data-longpress="edit"]').forEach(card => {
           let timer;
           card.addEventListener('touchstart', (e) => {
-            timer = setTimeout(() => {
-              openHabitDialog(card.dataset.id);
-            }, 500);
+            timer = setTimeout(() => openHabitDialog(card.dataset.id), 500);
           });
           card.addEventListener('touchend', () => clearTimeout(timer));
           card.addEventListener('touchmove', () => clearTimeout(timer));
-          // 桌面端右键
           card.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             openHabitDialog(card.dataset.id);
@@ -474,12 +449,21 @@
         appData.history[today][id] = habit.todayCount;
         saveData(appData);
         renderCheck();
-        if (habit.todayCount >= habit.dailyGoal) {
-          alert('🎉 目标达成！');
-        }
+        if (habit.todayCount >= habit.dailyGoal) alert('🎉 目标达成！');
       }
 
-      // ---------- 日历视图 ----------
+      function subtractCount(id) {
+        const habit = appData.habits.find(h => h.id === id);
+        if (!habit) return;
+        habit.todayCount = Math.max(0, habit.todayCount - habit.step);
+        const today = getToday();
+        if (!appData.history[today]) appData.history[today] = {};
+        appData.history[today][id] = habit.todayCount;
+        saveData(appData);
+        renderCheck();
+      }
+
+      // ---------- 日历（保持不变，仅微调颜色引用） ----------
       function renderCalendar() {
         const now = new Date();
         if (!currentCalendarYear) {
@@ -490,37 +474,28 @@
         const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth, 0).getDate();
         const firstDay = new Date(currentCalendarYear, currentCalendarMonth-1, 1).getDay();
         const today = getToday();
-        let html = `
-          <div class="cal-header">
-            <span class="cal-arrow" id="prevMonth">‹</span>
-            <span class="cal-title">${currentCalendarYear}年${currentCalendarMonth}月</span>
-            <span class="cal-arrow" id="nextMonth">›</span>
-          </div>
-          <div class="cal-grid">
-        `;
+        let html = `<div class="cal-header">
+          <span class="cal-arrow" id="prevMonth">‹</span>
+          <span class="cal-title">${currentCalendarYear}年${currentCalendarMonth}月</span>
+          <span class="cal-arrow" id="nextMonth">›</span>
+        </div><div class="cal-grid">`;
         WEEK_LABELS.forEach(w => html += `<div class="cal-weekday">${w}</div>`);
-        for (let i = 0; i < firstDay; i++) {
-          html += '<div class="cal-day empty"></div>';
-        }
+        for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
         for (let d = 1; d <= daysInMonth; d++) {
           const dateStr = `${currentCalendarYear}-${String(currentCalendarMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
           const dayHistory = appData.history[dateStr] || {};
           const colors = [];
           appData.habits.forEach(h => {
-            if (dayHistory[h.id] && dayHistory[h.id] > 0) {
-              colors.push(h.color || appData.theme);
-            }
+            if (dayHistory[h.id] && dayHistory[h.id] > 0) colors.push(h.color || appData.theme);
           });
           const isToday = dateStr === today;
-          html += `
-            <div class="cal-day${isToday?' today':''}" data-date="${dateStr}">
-              <span class="day-num">${d}</span>
-              <div class="day-dots">${colors.map(c => `<span class="dot" style="background:${c}"></span>`).join('')}</div>
-            </div>`;
+          html += `<div class="cal-day${isToday?' today':''}" data-date="${dateStr}">
+            <span class="day-num">${d}</span>
+            <div class="day-dots">${colors.map(c => `<span class="dot" style="background:${c}"></span>`).join('')}</div>
+          </div>`;
         }
         html += '</div>';
         container.innerHTML = html;
-
         document.getElementById('prevMonth').onclick = () => {
           if (currentCalendarMonth === 1) { currentCalendarYear--; currentCalendarMonth = 12; }
           else currentCalendarMonth--;
@@ -548,25 +523,22 @@
           html = '<div class="empty-tip">暂无习惯数据</div>';
         } else {
           list.forEach(item => {
-            html += `
-              <div class="detail-row">
-                <span>${escapeHtml(item.name)}</span>
-                <div class="detail-actions">
-                  <button class="action-btn minus" data-date="${dateStr}" data-id="${item.id}" data-delta="-1">－</button>
-                  <span class="detail-count">${item.count} / ${item.dailyGoal} ${escapeHtml(item.unit)}</span>
-                  <button class="action-btn plus" data-date="${dateStr}" data-id="${item.id}" data-delta="1">＋</button>
-                </div>
-              </div>`;
+            html += `<div class="detail-row">
+              <span>${escapeHtml(item.name)}</span>
+              <div class="detail-actions">
+                <button class="action-btn minus" data-date="${dateStr}" data-id="${item.id}" data-delta="-1">－</button>
+                <span class="detail-count">${item.count} / ${item.dailyGoal} ${escapeHtml(item.unit)}</span>
+                <button class="action-btn plus" data-date="${dateStr}" data-id="${item.id}" data-delta="1">＋</button>
+              </div>
+            </div>`;
           });
         }
         document.getElementById('dayDetailList').innerHTML = html;
         document.getElementById('dayMask').style.display = 'block';
         document.getElementById('dayDialog').style.display = 'block';
-
         document.querySelectorAll('.action-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const { date, id, delta } = btn.dataset;
-            adjustHistory(date, id, parseInt(delta));
+          btn.addEventListener('click', () => {
+            adjustHistory(btn.dataset.date, btn.dataset.id, parseInt(btn.dataset.delta));
           });
         });
       }
@@ -583,20 +555,18 @@
         const current = appData.history[date][id] || 0;
         const newCount = Math.max(0, current + delta);
         appData.history[date][id] = newCount;
-        // 如果是今天，更新 habit.todayCount
         if (date === getToday()) {
           const habit = appData.habits.find(h => h.id === id);
           if (habit) habit.todayCount = newCount;
         }
         saveData(appData);
-        showDayDetail(date); // 刷新弹窗
-        renderCalendar(); // 更新日历圆点
+        showDayDetail(date);
+        renderCalendar();
         if (document.getElementById('view-check').classList.contains('active')) renderCheck();
       }
 
       // ---------- 设置视图 ----------
       function renderSettings() {
-        // 主题色
         let html = '';
         PRESET_COLORS.forEach(c => {
           html += `<div class="color-block${appData.theme === c ? ' selected' : ''}" style="background:${c}" data-color="${c}">${appData.theme === c ? '<span class="color-check">✓</span>' : ''}</div>`;
@@ -606,26 +576,24 @@
           block.addEventListener('click', () => changeTheme(block.dataset.color));
         });
 
-        // 习惯列表
         let habitHtml = '';
         appData.habits.forEach(h => {
-          const days = h.daysOfWeek ? h.daysOfWeek.map(d => WEEK_LABELS[d]).join('、') : '每天';
-          habitHtml += `
-            <div class="habit-setting-row" data-id="${h.id}">
-              <div><span class="habit-color-dot" style="background:${h.color || appData.theme}"></span>${escapeHtml(h.name)}</div>
-              <span style="color:#999;font-size:13px;">${days}</span>
-            </div>`;
+          const repeatText = h.repeatMode === 'weekly'
+            ? (h.daysOfWeek.map(d => WEEK_LABELS[d]).join('、') || '每天')
+            : `每隔${h.intervalDays}天`;
+          habitHtml += `<div class="habit-setting-row" data-id="${h.id}">
+            <div><span class="habit-color-dot" style="background:${h.color || appData.theme}"></span>${escapeHtml(h.name)}${h.note ? ' <span style="color:#888;font-size:12px;">' + escapeHtml(h.note) + '</span>' : ''}</div>
+            <span style="color:#999;font-size:13px;">${repeatText}</span>
+          </div>`;
         });
         document.getElementById('habitListSettings').innerHTML = habitHtml;
         document.querySelectorAll('.habit-setting-row').forEach(row => {
           row.addEventListener('click', () => openHabitDialog(row.dataset.id));
-          // 长按同样生效
           let timer;
           row.addEventListener('touchstart', (e) => { timer = setTimeout(() => openHabitDialog(row.dataset.id), 500); });
           row.addEventListener('touchend', () => clearTimeout(timer));
           row.addEventListener('contextmenu', (e) => { e.preventDefault(); openHabitDialog(row.dataset.id); });
         });
-
         document.getElementById('addHabitSettings').onclick = () => openHabitDialog(null);
       }
 
@@ -647,13 +615,15 @@
         document.getElementById('inputUnit').value = habit ? habit.unit : '杯';
         document.getElementById('inputStep').value = habit ? habit.step : 1;
         document.getElementById('inputGoal').value = habit ? habit.dailyGoal : 8;
-        document.getElementById('inputColor').value = habit ? (habit.color || '#4CAF50') : '#4CAF50';
+        document.getElementById('inputNote').value = habit ? (habit.note || '') : '';
+        const selColor = habit ? (habit.color || '#4CAF50') : '#4CAF50';
+        document.getElementById('inputColor').value = selColor;
         document.getElementById('btnDelete').style.display = habit ? 'block' : 'none';
 
         // 颜色选择
         let colorHtml = '';
         PRESET_COLORS.forEach(c => {
-          colorHtml += `<div class="color-block${(habit ? (habit.color||'#4CAF50') : '#4CAF50') === c ? ' selected' : ''}" style="background:${c}" data-color="${c}">${(habit ? (habit.color||'#4CAF50') : '#4CAF50') === c ? '<span class="color-check">✓</span>' : ''}</div>`;
+          colorHtml += `<div class="color-block${selColor === c ? ' selected' : ''}" style="background:${c}" data-color="${c}">${selColor === c ? '<span class="color-check">✓</span>' : ''}</div>`;
         });
         document.getElementById('habitColorOptions').innerHTML = colorHtml;
         document.querySelectorAll('#habitColorOptions .color-block').forEach(block => {
@@ -665,14 +635,37 @@
           });
         });
 
-        // 星期选择
-        const daysOfWeek = habit ? (habit.daysOfWeek || [0,1,2,3,4,5,6]) : [0,1,2,3,4,5,6];
+        // 重复模式
+        const currentMode = habit ? habit.repeatMode : 'weekly';
+        document.querySelectorAll('#repeatModeSelect .mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.mode-btn[data-mode="${currentMode}"]`).classList.add('active');
+        document.getElementById('weeklyOptions').style.display = currentMode === 'weekly' ? 'block' : 'none';
+        document.getElementById('intervalOptions').style.display = currentMode === 'interval' ? 'block' : 'none';
+        // 星期按钮
+        const daysOfWeek = (habit && currentMode === 'weekly') ? (habit.daysOfWeek || [0,1,2,3,4,5,6]) : [0,1,2,3,4,5,6];
         let weekHtml = '';
         WEEK_LABELS.forEach((label, index) => {
-          const checked = daysOfWeek.includes(index) ? 'checked' : '';
-          weekHtml += `<label><input type="checkbox" value="${index}" ${checked}> ${label}</label>`;
+          const selected = daysOfWeek.includes(index) ? ' selected' : '';
+          weekHtml += `<div class="weekday-btn${selected}" data-day="${index}">${label}</div>`;
         });
-        document.getElementById('weekdaySelect').innerHTML = weekHtml;
+        document.getElementById('weekdayBtns').innerHTML = weekHtml;
+        document.querySelectorAll('.weekday-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            this.classList.toggle('selected');
+          });
+        });
+        document.getElementById('inputInterval').value = (habit && habit.intervalDays) ? habit.intervalDays : 2;
+
+        // 模式切换事件
+        document.querySelectorAll('#repeatModeSelect .mode-btn').forEach(btn => {
+          btn.onclick = function() {
+            document.querySelectorAll('#repeatModeSelect .mode-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const mode = this.dataset.mode;
+            document.getElementById('weeklyOptions').style.display = mode === 'weekly' ? 'block' : 'none';
+            document.getElementById('intervalOptions').style.display = mode === 'interval' ? 'block' : 'none';
+          };
+        });
 
         document.getElementById('dialogMask').style.display = 'block';
         document.getElementById('habitDialog').style.display = 'block';
@@ -683,7 +676,6 @@
         document.getElementById('habitDialog').style.display = 'none';
         currentEditingId = null;
       }
-
       document.getElementById('dialogMask').addEventListener('click', closeHabitDialog);
       document.getElementById('btnCancel').addEventListener('click', closeHabitDialog);
 
@@ -693,28 +685,43 @@
         const step = parseInt(document.getElementById('inputStep').value) || 1;
         const goal = parseInt(document.getElementById('inputGoal').value) || 1;
         const color = document.getElementById('inputColor').value;
-        const checkboxes = document.querySelectorAll('#weekdaySelect input[type="checkbox"]:checked');
-        const daysOfWeek = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        const note = document.getElementById('inputNote').value.trim();
+        const mode = document.querySelector('#repeatModeSelect .mode-btn.active').dataset.mode;
+        let daysOfWeek = null, intervalDays = null;
+        if (mode === 'weekly') {
+          const selected = document.querySelectorAll('#weekdayBtns .weekday-btn.selected');
+          daysOfWeek = Array.from(selected).map(btn => parseInt(btn.dataset.day));
+          if (daysOfWeek.length === 0) return alert('至少选择一天');
+        } else {
+          intervalDays = parseInt(document.getElementById('inputInterval').value) || 1;
+          if (intervalDays < 1) return alert('间隔天数至少为1');
+        }
 
-        if (!name) return alert('请输入习惯名称');
+        if (!name) return alert('请输入名称');
         if (!unit) return alert('请输入单位');
-        if (daysOfWeek.length === 0) return alert('至少选择一天');
 
         if (currentEditingId) {
-          const index = appData.habits.findIndex(h => h.id === currentEditingId);
-          if (index !== -1) {
-            appData.habits[index] = {
-              ...appData.habits[index],
-              name, unit, step, dailyGoal: goal, color, daysOfWeek
+          const idx = appData.habits.findIndex(h => h.id === currentEditingId);
+          if (idx !== -1) {
+            appData.habits[idx] = {
+              ...appData.habits[idx],
+              name, unit, step, dailyGoal: goal, color, note,
+              repeatMode: mode,
+              daysOfWeek: mode === 'weekly' ? daysOfWeek : null,
+              intervalDays: mode === 'interval' ? intervalDays : null,
+              createdDate: appData.habits[idx].createdDate || getToday()
             };
           }
         } else {
           const newHabit = {
             id: Date.now().toString(),
-            name, unit, step, dailyGoal: goal, color, daysOfWeek,
+            name, unit, step, dailyGoal: goal, color, note,
+            repeatMode: mode,
+            daysOfWeek: mode === 'weekly' ? daysOfWeek : null,
+            intervalDays: mode === 'interval' ? intervalDays : null,
+            createdDate: getToday(),
             todayCount: 0
           };
-          // 检查今天历史
           const today = getToday();
           if (appData.history[today] && appData.history[today][newHabit.id]) {
             newHabit.todayCount = appData.history[today][newHabit.id];
@@ -746,7 +753,6 @@
         });
       }
 
-      // 初始渲染
       switchView('check');
     })();
   </script>
