@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>习惯打卡</title>
+  <!-- PWA 支持 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="习惯打卡">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>✅</text></svg>">
+  <link rel="manifest" href="data:application/json,{name:'习惯打卡',short_name:'打卡',display:'standalone'}">
+  <style>
+    :root {
+      --theme: #4CAF50;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: calc(60px + var(--safe-bottom));
+    }
+    /* 头部导航 */
+    .tabs {
+      display: flex;
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid #eee;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px 0;
+      font-size: 16px;
+      color: #666;
+      position: relative;
+      cursor: pointer;
+    }
+    .tab.active {
+      color: var(--theme);
+      font-weight: bold;
+    }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 25%;
+      right: 25%;
+      height: 3px;
+      background: var(--theme);
+      border-radius: 2px;
+    }
+
+    /* 视图容器 */
+    .view { display: none; padding: 12px; }
+    .view.active { display: block; }
+
+    /* 打卡卡片 */
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      cursor: pointer;
+    }
+    .card:active { transform: scale(0.98); }
+    .card-info { flex: 1; }
+    .card-name { font-size: 18px; font-weight: bold; color: #333; }
+    .card-progress { font-size: 14px; color: #666; margin: 4px 0; }
+    .card-bar {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .card-bar-inner {
+      height: 100%;
+      background: var(--theme);
+      transition: width 0.2s;
+    }
+    .card-btn {
+      background: var(--theme);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 18px;
+      font-size: 14px;
+      margin-left: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      display: block;
+      margin: 20px auto;
+      width: 80%;
+      background: var(--theme);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 14px;
+      font-size: 18px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* 日历 */
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .cal-title { font-size: 20px; font-weight: bold; }
+    .cal-arrow { font-size: 28px; color: var(--theme); padding: 0 12px; cursor: pointer; }
+    .cal-grid {
+      display: flex;
+      flex-wrap: wrap;
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .cal-weekday {
+      width: 14.28%;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 13px;
+      color: #999;
+      background: #fafafa;
+      font-weight: bold;
+    }
+    .cal-day {
+      width: 14.28%;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      border-right: 1px solid #f0f0f0;
+      cursor: pointer;
+      position: relative;
+    }
+    .cal-day:nth-child(7n+1) { border-right: none; }
+    .cal-day.empty { background: #fafafa; cursor: default; }
+    .cal-day.today { background: #e8f5e9; }
+    .cal-day.today .day-num { color: var(--theme); font-weight: bold; }
+    .day-num { color: #333; }
+    .day-dots {
+      display: flex;
+      gap: 2px;
+      margin-top: 2px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    /* 设置 */
+    .setting-group { margin-bottom: 24px; }
+    .setting-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; }
+    .color-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .color-block {
+      width: 44px;
+      height: 44px;
+      border-radius: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid transparent;
+      transition: transform 0.15s;
+    }
+    .color-block.selected { border-color: #333; transform: scale(1.15); }
+    .color-check { color: white; font-size: 20px; }
+    .habit-setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .habit-color-dot {
+      width: 14px; height: 14px; border-radius: 50%; margin-right: 10px;
+      display: inline-block; vertical-align: middle;
+    }
+
+    /* 弹窗 */
+    .mask {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+    }
+    .dialog {
+      position: fixed;
+      left: 20px;
+      right: 20px;
+      top: 15%;
+      background: white;
+      border-radius: 20px;
+      padding: 24px 20px;
+      z-index: 101;
+      max-height: 75vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .dialog-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+    .form-item { margin-bottom: 16px; }
+    .form-item label { font-size: 14px; color: #666; display: block; margin-bottom: 4px; }
+    .form-item input {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      height: 44px;
+      padding: 0 12px;
+      width: 100%;
+      font-size: 16px;
+      background: #fafafa;
+    }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-item { flex: 1; }
+    .weekday-select { display: flex; flex-wrap: wrap; gap: 10px; }
+    .weekday-select label { display: flex; align-items: center; gap: 4px; font-size: 14px; cursor: pointer; }
+    .dialog-btns { display: flex; gap: 12px; margin-top: 20px; }
+    .dialog-btns button {
+      flex: 1;
+      height: 44px;
+      border-radius: 22px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .cancel-btn { background: #f0f0f0; color: #666; }
+    .confirm-btn { background: var(--theme); color: white; }
+    .delete-btn { background: #ff5252; color: white; }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .detail-actions { display: flex; align-items: center; gap: 10px; }
+    .action-btn {
+      width: 36px; height: 36px; border-radius: 18px;
+      border: none; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .action-btn.minus { background: #ffcdd2; color: #c62828; }
+    .action-btn.plus { background: #c8e6c9; color: #2e7d32; }
+    .detail-count { min-width: 80px; text-align: center; font-size: 14px; color: #666; }
+
+    .empty-tip { text-align: center; color: #999; margin-top: 60px; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部标签 -->
+  <div class="tabs">
+    <div class="tab active" data-view="check">打卡</div>
+    <div class="tab" data-view="calendar">日历</div>
+    <div class="tab" data-view="settings">设置</div>
+  </div>
+
+  <!-- 打卡视图 -->
+  <div id="view-check" class="view active"></div>
+
+  <!-- 日历视图 -->
+  <div id="view-calendar" class="view"></div>
+
+  <!-- 设置视图 -->
+  <div id="view-settings" class="view">
+    <div class="setting-group">
+      <div class="setting-title">🎨 主题颜色</div>
+      <div class="color-options" id="themeColors"></div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-title">📋 管理习惯（长按编辑）</div>
+      <div id="habitListSettings"></div>
+      <button class="add-btn" id="addHabitSettings">＋ 添加新习惯</button>
+    </div>
+  </div>
+
+  <!-- 弹窗：添加/编辑习惯 -->
+  <div class="mask" id="dialogMask" style="display:none"></div>
+  <div class="dialog" id="habitDialog" style="display:none">
+    <div class="dialog-title" id="dialogTitle">添加习惯</div>
+    <div class="form-item"><label>名称</label><input id="inputName" placeholder="例如：喝水"></div>
+    <div class="form-item"><label>单位</label><input id="inputUnit" placeholder="杯、毫升..."></div>
+    <div class="form-row">
+      <div class="form-item"><label>步长</label><input type="number" id="inputStep" value="1"></div>
+      <div class="form-item"><label>目标</label><input type="number" id="inputGoal" value="8"></div>
+    </div>
+    <div class="form-item">
+      <label>颜色</label>
+      <div class="color-options" id="habitColorOptions"></div>
+      <input type="hidden" id="inputColor" value="#4CAF50">
+    </div>
+    <div class="form-item">
+      <label>重复星期</label>
+      <div class="weekday-select" id="weekdaySelect"></div>
+    </div>
+    <div class="dialog-btns">
+      <button class="cancel-btn" id="btnCancel">取消</button>
+      <button class="confirm-btn" id="btnSave">添加</button>
+      <button class="delete-btn" id="btnDelete" style="display:none">删除</button>
+    </div>
+  </div>
+
+  <!-- 弹窗：日期详情 -->
+  <div class="mask" id="dayMask" style="display:none"></div>
+  <div class="dialog" id="dayDialog" style="display:none">
+    <div class="dialog-title" id="dayDialogTitle"></div>
+    <div id="dayDetailList"></div>
+    <button class="confirm-btn" id="btnCloseDay" style="margin-top:16px; width:100%;">关闭</button>
+  </div>
+
+  <script>
+    (function(){
+      // ---------- 数据管理 ----------
+      const STORAGE_KEY = 'habit_data';
+      const PRESET_COLORS = ['#4CAF50','#2196F3','#FF9800','#E91E63','#9C27B0','#607D8B','#FF5722','#009688'];
+      const WEEK_LABELS = ['日','一','二','三','四','五','六'];
+
+      function getToday() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }
+
+      function loadData() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { habits: [], history: {}, theme: '#4CAF50' };
+        try { return JSON.parse(raw); } catch(e) { return { habits: [], history: {}, theme: '#4CAF50' }; }
+      }
+
+      function saveData(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      let appData = loadData();
+      // 确保结构完整
+      if (!appData.habits) appData.habits = [];
+      if (!appData.history) appData.history = {};
+      if (!appData.theme) appData.theme = '#4CAF50';
+
+      // 每日重置检查
+      function checkDateReset() {
+        const today = getToday();
+        const lastDate = localStorage.getItem('habit_lastDate');
+        if (lastDate !== today) {
+          // 保存昨日数据到history（如果存在未保存的todayCount，已经在打卡时写入history）
+          // 重置所有习惯的todayCount为今天的历史值
+          appData.habits.forEach(h => {
+            const todayHistory = (appData.history[today] && appData.history[today][h.id]) || 0;
+            h.todayCount = todayHistory;
+          });
+          localStorage.setItem('habit_lastDate', today);
+          saveData(appData);
+        }
+      }
+      checkDateReset();
+
+      // 应用主题色
+      function applyTheme(color) {
+        document.documentElement.style.setProperty('--theme', color);
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
+      }
+      applyTheme(appData.theme);
+
+      // ---------- 视图切换 ----------
+      let currentEditingId = null; // 正在编辑的习惯id
+      let currentCalendarYear, currentCalendarMonth;
+
+      function switchView(viewName) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(`view-${viewName}`).classList.add('active');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab[data-view="${viewName}"]`).classList.add('active');
+        if (viewName === 'calendar') renderCalendar();
+        if (viewName === 'settings') renderSettings();
+        if (viewName === 'check') renderCheck();
+      }
+
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchView(tab.dataset.view));
+      });
+
+      // ---------- 打卡视图 ----------
+      function getFilteredHabits() {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0=周日
+        return appData.habits.filter(h => {
+          if (!h.daysOfWeek || h.daysOfWeek.length === 0) return false;
+          return h.daysOfWeek.includes(dayOfWeek);
+        });
+      }
+
+      function renderCheck() {
+        const container = document.getElementById('view-check');
+        const habits = getFilteredHabits();
+        if (habits.length === 0) {
+          container.innerHTML = '<div class="empty-tip">今天没有要打卡的习惯 😴</div>';
+          return;
+        }
+        let html = '';
+        habits.forEach(h => {
+          const pct = Math.min(100, (h.todayCount / h.dailyGoal) * 100);
+          html += `
+            <div class="card" data-id="${h.id}" data-longpress="edit">
+              <div class="card-info">
+                <div class="card-name">${escapeHtml(h.name)}</div>
+                <div class="card-progress">${h.todayCount} / ${h.dailyGoal} ${escapeHtml(h.unit)}</div>
+                <div class="card-bar"><div class="card-bar-inner" style="width:${pct}%; background:${h.color || appData.theme}"></div></div>
+              </div>
+              <button class="card-btn" style="background:${h.color || appData.theme}" data-action="add" data-id="${h.id}">+${h.step}${escapeHtml(h.unit)}</button>
+            </div>`;
+        });
+        html += '<button class="add-btn" id="addHabitCheck">＋ 添加新习惯</button>';
+        container.innerHTML = html;
+        bindCheckEvents();
+      }
+
+      function bindCheckEvents() {
+        document.querySelectorAll('[data-action="add"]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            addCount(id);
+          });
+        });
+        document.getElementById('addHabitCheck')?.addEventListener('click', () => openHabitDialog(null));
+        // 长按编辑
+        document.querySelectorAll('[data-longpress="edit"]').forEach(card => {
+          let timer;
+          card.addEventListener('touchstart', (e) => {
+            timer = setTimeout(() => {
+              openHabitDialog(card.dataset.id);
+            }, 500);
+          });
+          card.addEventListener('touchend', () => clearTimeout(timer));
+          card.addEventListener('touchmove', () => clearTimeout(timer));
+          // 桌面端右键
+          card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            openHabitDialog(card.dataset.id);
+          });
+        });
+      }
+
+      function addCount(id) {
+        const habit = appData.habits.find(h => h.id === id);
+        if (!habit) return;
+        habit.todayCount += habit.step;
+        const today = getToday();
+        if (!appData.history[today]) appData.history[today] = {};
+        appData.history[today][id] = habit.todayCount;
+        saveData(appData);
+        renderCheck();
+        if (habit.todayCount >= habit.dailyGoal) {
+          alert('🎉 目标达成！');
+        }
+      }
+
+      // ---------- 日历视图 ----------
+      function renderCalendar() {
+        const now = new Date();
+        if (!currentCalendarYear) {
+          currentCalendarYear = now.getFullYear();
+          currentCalendarMonth = now.getMonth() + 1;
+        }
+        const container = document.getElementById('view-calendar');
+        const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth, 0).getDate();
+        const firstDay = new Date(currentCalendarYear, currentCalendarMonth-1, 1).getDay();
+        const today = getToday();
+        let html = `
+          <div class="cal-header">
+            <span class="cal-arrow" id="prevMonth">‹</span>
+            <span class="cal-title">${currentCalendarYear}年${currentCalendarMonth}月</span>
+            <span class="cal-arrow" id="nextMonth">›</span>
+          </div>
+          <div class="cal-grid">
+        `;
+        WEEK_LABELS.forEach(w => html += `<div class="cal-weekday">${w}</div>`);
+        for (let i = 0; i < firstDay; i++) {
+          html += '<div class="cal-day empty"></div>';
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = `${currentCalendarYear}-${String(currentCalendarMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const dayHistory = appData.history[dateStr] || {};
+          const colors = [];
+          appData.habits.forEach(h => {
+            if (dayHistory[h.id] && dayHistory[h.id] > 0) {
+              colors.push(h.color || appData.theme);
+            }
+          });
+          const isToday = dateStr === today;
+          html += `
+            <div class="cal-day${isToday?' today':''}" data-date="${dateStr}">
+              <span class="day-num">${d}</span>
+              <div class="day-dots">${colors.map(c => `<span class="dot" style="background:${c}"></span>`).join('')}</div>
+            </div>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+
+        document.getElementById('prevMonth').onclick = () => {
+          if (currentCalendarMonth === 1) { currentCalendarYear--; currentCalendarMonth = 12; }
+          else currentCalendarMonth--;
+          renderCalendar();
+        };
+        document.getElementById('nextMonth').onclick = () => {
+          if (currentCalendarMonth === 12) { currentCalendarYear++; currentCalendarMonth = 1; }
+          else currentCalendarMonth++;
+          renderCalendar();
+        };
+        document.querySelectorAll('.cal-day[data-date]').forEach(day => {
+          day.addEventListener('click', () => showDayDetail(day.dataset.date));
+        });
+      }
+
+      function showDayDetail(dateStr) {
+        const dayHistory = appData.history[dateStr] || {};
+        const list = appData.habits.map(h => ({
+          ...h,
+          count: dayHistory[h.id] || 0
+        }));
+        document.getElementById('dayDialogTitle').textContent = dateStr + ' 完成情况';
+        let html = '';
+        if (list.length === 0) {
+          html = '<div class="empty-tip">暂无习惯数据</div>';
+        } else {
+          list.forEach(item => {
+            html += `
+              <div class="detail-row">
+                <span>${escapeHtml(item.name)}</span>
+                <div class="detail-actions">
+                  <button class="action-btn minus" data-date="${dateStr}" data-id="${item.id}" data-delta="-1">－</button>
+                  <span class="detail-count">${item.count} / ${item.dailyGoal} ${escapeHtml(item.unit)}</span>
+                  <button class="action-btn plus" data-date="${dateStr}" data-id="${item.id}" data-delta="1">＋</button>
+                </div>
+              </div>`;
+          });
+        }
+        document.getElementById('dayDetailList').innerHTML = html;
+        document.getElementById('dayMask').style.display = 'block';
+        document.getElementById('dayDialog').style.display = 'block';
+
+        document.querySelectorAll('.action-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const { date, id, delta } = btn.dataset;
+            adjustHistory(date, id, parseInt(delta));
+          });
+        });
+      }
+
+      function closeDayDialog() {
+        document.getElementById('dayMask').style.display = 'none';
+        document.getElementById('dayDialog').style.display = 'none';
+      }
+      document.getElementById('dayMask').addEventListener('click', closeDayDialog);
+      document.getElementById('btnCloseDay').addEventListener('click', closeDayDialog);
+
+      function adjustHistory(date, id, delta) {
+        if (!appData.history[date]) appData.history[date] = {};
+        const current = appData.history[date][id] || 0;
+        const newCount = Math.max(0, current + delta);
+        appData.history[date][id] = newCount;
+        // 如果是今天，更新 habit.todayCount
+        if (date === getToday()) {
+          const habit = appData.habits.find(h => h.id === id);
+          if (habit) habit.todayCount = newCount;
+        }
+        saveData(appData);
+        showDayDetail(date); // 刷新弹窗
+        renderCalendar(); // 更新日历圆点
+        if (document.getElementById('view-check').classList.contains('active')) renderCheck();
+      }
+
+      // ---------- 设置视图 ----------
+      function renderSettings() {
+        // 主题色
+        let html = '';
+        PRESET_COLORS.forEach(c => {
+          html += `<div class="color-block${appData.theme === c ? ' selected' : ''}" style="background:${c}" data-color="${c}">${appData.theme === c ? '<span class="color-check">✓</span>' : ''}</div>`;
+        });
+        document.getElementById('themeColors').innerHTML = html;
+        document.querySelectorAll('#themeColors .color-block').forEach(block => {
+          block.addEventListener('click', () => changeTheme(block.dataset.color));
+        });
+
+        // 习惯列表
+        let habitHtml = '';
+        appData.habits.forEach(h => {
+          const days = h.daysOfWeek ? h.daysOfWeek.map(d => WEEK_LABELS[d]).join('、') : '每天';
+          habitHtml += `
+            <div class="habit-setting-row" data-id="${h.id}">
+              <div><span class="habit-color-dot" style="background:${h.color || appData.theme}"></span>${escapeHtml(h.name)}</div>
+              <span style="color:#999;font-size:13px;">${days}</span>
+            </div>`;
+        });
+        document.getElementById('habitListSettings').innerHTML = habitHtml;
+        document.querySelectorAll('.habit-setting-row').forEach(row => {
+          row.addEventListener('click', () => openHabitDialog(row.dataset.id));
+          // 长按同样生效
+          let timer;
+          row.addEventListener('touchstart', (e) => { timer = setTimeout(() => openHabitDialog(row.dataset.id), 500); });
+          row.addEventListener('touchend', () => clearTimeout(timer));
+          row.addEventListener('contextmenu', (e) => { e.preventDefault(); openHabitDialog(row.dataset.id); });
+        });
+
+        document.getElementById('addHabitSettings').onclick = () => openHabitDialog(null);
+      }
+
+      function changeTheme(color) {
+        appData.theme = color;
+        saveData(appData);
+        applyTheme(color);
+        renderSettings();
+        if (document.getElementById('view-check').classList.contains('active')) renderCheck();
+        if (document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+      }
+
+      // ---------- 习惯编辑弹窗 ----------
+      function openHabitDialog(id) {
+        currentEditingId = id;
+        const habit = id ? appData.habits.find(h => h.id === id) : null;
+        document.getElementById('dialogTitle').textContent = habit ? '编辑习惯' : '添加习惯';
+        document.getElementById('inputName').value = habit ? habit.name : '';
+        document.getElementById('inputUnit').value = habit ? habit.unit : '杯';
+        document.getElementById('inputStep').value = habit ? habit.step : 1;
+        document.getElementById('inputGoal').value = habit ? habit.dailyGoal : 8;
+        document.getElementById('inputColor').value = habit ? (habit.color || '#4CAF50') : '#4CAF50';
+        document.getElementById('btnDelete').style.display = habit ? 'block' : 'none';
+
+        // 颜色选择
+        let colorHtml = '';
+        PRESET_COLORS.forEach(c => {
+          colorHtml += `<div class="color-block${(habit ? (habit.color||'#4CAF50') : '#4CAF50') === c ? ' selected' : ''}" style="background:${c}" data-color="${c}">${(habit ? (habit.color||'#4CAF50') : '#4CAF50') === c ? '<span class="color-check">✓</span>' : ''}</div>`;
+        });
+        document.getElementById('habitColorOptions').innerHTML = colorHtml;
+        document.querySelectorAll('#habitColorOptions .color-block').forEach(block => {
+          block.addEventListener('click', function() {
+            document.getElementById('inputColor').value = this.dataset.color;
+            document.querySelectorAll('#habitColorOptions .color-block').forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+            this.innerHTML = '<span class="color-check">✓</span>';
+          });
+        });
+
+        // 星期选择
+        const daysOfWeek = habit ? (habit.daysOfWeek || [0,1,2,3,4,5,6]) : [0,1,2,3,4,5,6];
+        let weekHtml = '';
+        WEEK_LABELS.forEach((label, index) => {
+          const checked = daysOfWeek.includes(index) ? 'checked' : '';
+          weekHtml += `<label><input type="checkbox" value="${index}" ${checked}> ${label}</label>`;
+        });
+        document.getElementById('weekdaySelect').innerHTML = weekHtml;
+
+        document.getElementById('dialogMask').style.display = 'block';
+        document.getElementById('habitDialog').style.display = 'block';
+      }
+
+      function closeHabitDialog() {
+        document.getElementById('dialogMask').style.display = 'none';
+        document.getElementById('habitDialog').style.display = 'none';
+        currentEditingId = null;
+      }
+
+      document.getElementById('dialogMask').addEventListener('click', closeHabitDialog);
+      document.getElementById('btnCancel').addEventListener('click', closeHabitDialog);
+
+      document.getElementById('btnSave').addEventListener('click', () => {
+        const name = document.getElementById('inputName').value.trim();
+        const unit = document.getElementById('inputUnit').value.trim();
+        const step = parseInt(document.getElementById('inputStep').value) || 1;
+        const goal = parseInt(document.getElementById('inputGoal').value) || 1;
+        const color = document.getElementById('inputColor').value;
+        const checkboxes = document.querySelectorAll('#weekdaySelect input[type="checkbox"]:checked');
+        const daysOfWeek = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (!name) return alert('请输入习惯名称');
+        if (!unit) return alert('请输入单位');
+        if (daysOfWeek.length === 0) return alert('至少选择一天');
+
+        if (currentEditingId) {
+          const index = appData.habits.findIndex(h => h.id === currentEditingId);
+          if (index !== -1) {
+            appData.habits[index] = {
+              ...appData.habits[index],
+              name, unit, step, dailyGoal: goal, color, daysOfWeek
+            };
+          }
+        } else {
+          const newHabit = {
+            id: Date.now().toString(),
+            name, unit, step, dailyGoal: goal, color, daysOfWeek,
+            todayCount: 0
+          };
+          // 检查今天历史
+          const today = getToday();
+          if (appData.history[today] && appData.history[today][newHabit.id]) {
+            newHabit.todayCount = appData.history[today][newHabit.id];
+          }
+          appData.habits.push(newHabit);
+        }
+        saveData(appData);
+        closeHabitDialog();
+        if (document.getElementById('view-check').classList.contains('active')) renderCheck();
+        if (document.getElementById('view-settings').classList.contains('active')) renderSettings();
+        if (document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+      });
+
+      document.getElementById('btnDelete').addEventListener('click', () => {
+        if (!currentEditingId) return;
+        if (confirm('确定要删除这个习惯吗？')) {
+          appData.habits = appData.habits.filter(h => h.id !== currentEditingId);
+          saveData(appData);
+          closeHabitDialog();
+          if (document.getElementById('view-check').classList.contains('active')) renderCheck();
+          if (document.getElementById('view-settings').classList.contains('active')) renderSettings();
+          if (document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+        }
+      });
+
+      function escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function(m) {
+          return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m];
+        });
+      }
+
+      // 初始渲染
+      switchView('check');
+    })();
+  </script>
+</body>
+</html>
