@@ -43,7 +43,8 @@
     }
     .card:active { transform:scale(0.98); }
     .card-info { flex:1; }
-    .card-name { font-size:18px; font-weight:bold; color:#333; }
+    .card-name { font-size:18px; font-weight:bold; color:#333; display:flex; align-items:center; gap:6px; }
+    .card-icon { font-size:22px; }
     .card-progress { font-size:14px; color:#666; margin:4px 0; }
     .card-bar { height:8px; background:#e0e0e0; border-radius:4px; overflow:hidden; }
     .card-bar-inner { height:100%; transition:width 0.2s; }
@@ -99,7 +100,7 @@
     }
     .streak-item:last-child { border-bottom:none; }
     .streak-dot { width:12px; height:12px; border-radius:50%; }
-    .streak-name { flex:1; font-size:15px; }
+    .streak-name { flex:1; font-size:15px; display:flex; align-items:center; gap:4px; }
     .streak-count { font-weight:bold; color:var(--theme); }
 
     .setting-group { margin-bottom:24px; }
@@ -118,6 +119,7 @@
       cursor:pointer;
     }
     .habit-color-dot { width:12px; height:12px; border-radius:50%; margin-right:8px; display:inline-block; vertical-align:middle; }
+    .habit-icon { margin-right:4px; }
 
     .mask {
       position:fixed; top:0; left:0; right:0; bottom:0;
@@ -154,6 +156,14 @@
       background:white; font-size:14px; cursor:pointer; text-align:center; line-height:36px;
     }
     .weekday-btn.selected { background:var(--theme); color:white; border-color:var(--theme); }
+
+    .emoji-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .emoji-btn {
+      width:44px; height:44px; border-radius:22px; border:1px solid #ddd;
+      background:white; font-size:20px; cursor:pointer; display:flex;
+      align-items:center; justify-content:center;
+    }
+    .emoji-btn.selected { border-color:var(--theme); background:#e8f5e9; }
 
     .dialog-btns { display:flex; gap:12px; margin-top:20px; }
     .dialog-btns button {
@@ -200,6 +210,11 @@
   <div class="dialog" id="habitDialog" style="display:none">
     <div class="dialog-title" id="dialogTitle">添加习惯</div>
     <div class="form-item"><label>名称</label><input id="inputName" placeholder="例如：喝水"></div>
+    <div class="form-item">
+      <label>图标</label>
+      <div class="emoji-grid" id="emojiGrid"></div>
+      <input type="text" id="inputIcon" placeholder="或直接输入 emoji" maxlength="4" style="margin-top:8px;">
+    </div>
     <div class="form-item"><label>单位</label><input id="inputUnit" placeholder="天、次..."></div>
     <div class="form-row">
       <div class="form-item"><label>步长</label><input type="number" id="inputStep" value="1"></div>
@@ -220,6 +235,7 @@
         <div class="mode-btn active" data-mode="daily">每天</div>
         <div class="mode-btn" data-mode="weekly">每周</div>
         <div class="mode-btn" data-mode="monthly">每月</div>
+        <div class="mode-btn" data-mode="interval">每隔几天</div>
       </div>
       <div id="weeklyOptions" style="display:none;">
         <div class="weekday-btns" id="weekdayBtns"></div>
@@ -227,6 +243,9 @@
       <div id="monthlyOptions" style="display:none; margin-top:8px;">
         <label>每月几号（逗号分隔）</label>
         <input id="inputMonthDays" placeholder="例如：5,15,25" value="1">
+      </div>
+      <div id="intervalOptions" style="display:none; margin-top:8px;">
+        <label>每隔 <input type="number" id="inputInterval" value="2" min="1" style="width:60px;display:inline;"> 天</label>
       </div>
     </div>
     <div class="form-row">
@@ -257,6 +276,14 @@
         '#3F51B5','#009688','#FFEB3B','#FF9800','#795548','#9E9E9E','#00E676','#FF4081',
         '#536DFE','#FF6E40','#1DE9B6','#FFD740','#7C4DFF','#B2FF59'
       ];
+      // 预设常用 emoji
+      const PRESET_EMOJIS = [
+        '💧','🥤','🧊','☕','🍵','🥛','🧃',
+        '🏃','🚶','🚴','🏋️','🤸','🧘','🏊','⚽','🏀','🎾',
+        '📚','📖','✍️','🎓','💻','🧠',
+        '🍎','🥗','💊','🧴','😴','🌙','⏰',
+        '🧹','🧺','🪴','🐶','🎸','🎨','✈️','💬','❤️','⭐','🔥','💡'
+      ];
       const WEEK_LABELS = ['日','一','二','三','四','五','六'];
 
       function getToday() {
@@ -279,9 +306,11 @@
         h.repeatMode = h.repeatMode || 'daily';
         if (h.repeatMode === 'weekly' && !h.daysOfWeek) h.daysOfWeek = [0,1,2,3,4,5,6];
         if (h.repeatMode === 'monthly' && !h.monthDays) h.monthDays = [1];
+        if (h.repeatMode === 'interval' && !h.intervalDays) h.intervalDays = 2;
         if (!h.startDate) h.startDate = getToday();
         if (!h.endDate) h.endDate = '';
         if (!h.note) h.note = '';
+        if (!h.icon) h.icon = '';
         if (!h.todayCount) h.todayCount = 0;
         if (!h.unit) h.unit = '天';
         if (!h.dailyGoal) h.dailyGoal = 1;
@@ -316,7 +345,6 @@
       function isHabitDay(habit, dateStr) {
         const date = parseDate(dateStr);
         if (!date) return false;
-        // 检查有效期
         if (habit.startDate && dateStr < habit.startDate) return false;
         if (habit.endDate && dateStr > habit.endDate) return false;
         if (habit.repeatMode === 'daily') return true;
@@ -328,10 +356,14 @@
           const dayOfMonth = date.getDate();
           return habit.monthDays && habit.monthDays.includes(dayOfMonth);
         }
+        if (habit.repeatMode === 'interval') {
+          const start = parseDate(habit.startDate || '2000-01-01');
+          const diffDays = Math.floor((date - start) / (1000 * 60 * 60 * 24));
+          return diffDays >= 0 && diffDays % habit.intervalDays === 0;
+        }
         return false;
       }
 
-      // 判断习惯在当天是否完成目标
       function isDayCompleted(habitId, dateStr) {
         const dayHistory = appData.history[dateStr] || {};
         const count = dayHistory[habitId] || 0;
@@ -339,13 +371,12 @@
         return habit && count >= habit.dailyGoal;
       }
 
-      // 计算连续完成天数（向前追溯）
+      // 计算连续完成天数
       function calcStreak(habit) {
         let streak = 0;
         const today = getToday();
         let current = parseDate(today);
         if (!isHabitDay(habit, today)) {
-          // 如果今天不是应出现日，则查找最近一个应出现日
           let found = false;
           while (!found) {
             current.setDate(current.getDate() - 1);
@@ -359,7 +390,6 @@
           }
           return streak;
         }
-        // 今天应出现
         if (!isDayCompleted(habit.id, today)) return 0;
         streak = 1;
         while (true) {
@@ -369,7 +399,7 @@
           if (isHabitDay(habit, ds)) {
             if (isDayCompleted(habit.id, ds)) streak++;
             else break;
-          } // 不是应出现日就跳过，不影响连续
+          }
         }
         return streak;
       }
@@ -410,7 +440,10 @@
           const pct = Math.min(100, (h.todayCount / h.dailyGoal) * 100);
           html += `<div class="card" data-id="${h.id}" data-longpress="edit">
             <div class="card-info">
-              <div class="card-name">${escapeHtml(h.name)}${h.note ? ` <small style="color:#888;">(${escapeHtml(h.note)})</small>` : ''}</div>
+              <div class="card-name">
+                ${h.icon ? `<span class="card-icon">${h.icon}</span>` : ''}
+                ${escapeHtml(h.name)}${h.note ? ` <small style="color:#888;">(${escapeHtml(h.note)})</small>` : ''}
+              </div>
               <div class="card-progress">${h.todayCount} / ${h.dailyGoal} ${escapeHtml(h.unit)}</div>
               <div class="card-bar"><div class="card-bar-inner" style="width:${pct}%; background:${h.color || appData.theme}"></div></div>
             </div>
@@ -498,7 +531,6 @@
           const dateStr = `${currentCalendarYear}-${String(currentCalendarMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
           const dayHistory = appData.history[dateStr] || {};
           const colors = [];
-          // 只显示达标习惯的颜色
           appData.habits.forEach(h => {
             if (isHabitDay(h, dateStr) && dayHistory[h.id] && dayHistory[h.id] >= h.dailyGoal) {
               colors.push(h.color || appData.theme);
@@ -521,7 +553,7 @@
           streakList.forEach(({ habit, streak }) => {
             html += `<div class="streak-item">
               <span class="streak-dot" style="background:${habit.color || appData.theme}"></span>
-              <span class="streak-name">${escapeHtml(habit.name)}</span>
+              <span class="streak-name">${habit.icon ? `<span>${habit.icon}</span>` : ''} ${escapeHtml(habit.name)}</span>
               <span class="streak-count">${streak} 天</span>
             </div>`;
           });
@@ -559,7 +591,7 @@
         } else {
           list.forEach(item => {
             html += `<div class="detail-row">
-              <span>${escapeHtml(item.name)}${!item.isTargetDay ? ' (非应出现日)' : ''}</span>
+              <span>${item.icon ? item.icon + ' ' : ''} ${escapeHtml(item.name)}${!item.isTargetDay ? ' (非应出现日)' : ''}</span>
               <div class="detail-actions">
                 <button class="action-btn minus" data-date="${dateStr}" data-id="${item.id}" data-delta="-1">－</button>
                 <span class="detail-count">${item.count} / ${item.dailyGoal} ${escapeHtml(item.unit)}</span>
@@ -615,9 +647,13 @@
         appData.habits.forEach(h => {
           const repeatText = h.repeatMode === 'daily' ? '每天' :
             h.repeatMode === 'weekly' ? (h.daysOfWeek.map(d => WEEK_LABELS[d]).join('、') || '每周') :
-            (h.monthDays ? `每月${h.monthDays.join(',')}号` : '每月');
+            h.repeatMode === 'monthly' ? (h.monthDays ? `每月${h.monthDays.join(',')}号` : '每月') :
+            h.repeatMode === 'interval' ? `每隔${h.intervalDays}天` : '';
           habitHtml += `<div class="habit-setting-row" data-id="${h.id}">
-            <div><span class="habit-color-dot" style="background:${h.color || appData.theme}"></span>${escapeHtml(h.name)}${h.note ? ' <span style="color:#888;font-size:12px;">' + escapeHtml(h.note) + '</span>' : ''}</div>
+            <div>
+              ${h.icon ? `<span class="habit-icon">${h.icon}</span>` : ''}
+              <span class="habit-color-dot" style="background:${h.color || appData.theme}"></span>${escapeHtml(h.name)}${h.note ? ' <span style="color:#888;font-size:12px;">' + escapeHtml(h.note) + '</span>' : ''}
+            </div>
             <span style="color:#999;font-size:13px;">${repeatText} ${h.startDate ? '起' : ''}</span>
           </div>`;
         });
@@ -654,6 +690,32 @@
         const selColor = habit ? (habit.color || '#4CAF50') : '#4CAF50';
         document.getElementById('inputColor').value = selColor;
         document.getElementById('btnDelete').style.display = habit ? 'block' : 'none';
+
+        // 图标设置
+        const currentIcon = habit ? (habit.icon || '') : '';
+        document.getElementById('inputIcon').value = currentIcon;
+        // 渲染 emoji 选择面板
+        let emojiHtml = '';
+        PRESET_EMOJIS.forEach(em => {
+          emojiHtml += `<div class="emoji-btn${currentIcon === em ? ' selected' : ''}" data-emoji="${em}">${em}</div>`;
+        });
+        document.getElementById('emojiGrid').innerHTML = emojiHtml;
+        document.querySelectorAll('.emoji-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const emoji = this.dataset.emoji;
+            document.getElementById('inputIcon').value = emoji;
+            document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+          });
+        });
+        // 手动输入同步
+        document.getElementById('inputIcon').addEventListener('input', function() {
+          const val = this.value.trim();
+          document.querySelectorAll('.emoji-btn').forEach(b => {
+            b.classList.remove('selected');
+            if (b.dataset.emoji === val) b.classList.add('selected');
+          });
+        });
 
         // 颜色选择
         let colorHtml = '';
@@ -692,6 +754,8 @@
 
         // 每月几号
         document.getElementById('inputMonthDays').value = habit && habit.monthDays ? habit.monthDays.join(',') : '1';
+        // 间隔天数
+        document.getElementById('inputInterval').value = (habit && habit.intervalDays) ? habit.intervalDays : 2;
 
         // 开始/结束日期
         document.getElementById('inputStartDate').value = habit ? (habit.startDate || getToday()) : getToday();
@@ -713,6 +777,7 @@
       function updateRepeatModeUI(mode) {
         document.getElementById('weeklyOptions').style.display = mode === 'weekly' ? 'block' : 'none';
         document.getElementById('monthlyOptions').style.display = mode === 'monthly' ? 'block' : 'none';
+        document.getElementById('intervalOptions').style.display = mode === 'interval' ? 'block' : 'none';
       }
 
       function closeHabitDialog() {
@@ -730,8 +795,9 @@
         const goal = parseInt(document.getElementById('inputGoal').value) || 1;
         const color = document.getElementById('inputColor').value;
         const note = document.getElementById('inputNote').value.trim();
+        const icon = document.getElementById('inputIcon').value.trim();
         const mode = document.querySelector('#repeatModeSelect .mode-btn.active').dataset.mode;
-        let daysOfWeek = null, monthDays = null;
+        let daysOfWeek = null, monthDays = null, intervalDays = null;
         if (mode === 'weekly') {
           const selected = document.querySelectorAll('#weekdayBtns .weekday-btn.selected');
           daysOfWeek = Array.from(selected).map(btn => parseInt(btn.dataset.day));
@@ -741,6 +807,9 @@
           const parts = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 31);
           if (parts.length === 0) return alert('请输入有效的每月日期（1-31）');
           monthDays = parts;
+        } else if (mode === 'interval') {
+          intervalDays = parseInt(document.getElementById('inputInterval').value) || 1;
+          if (intervalDays < 1) return alert('间隔天数至少为1');
         }
         const startDate = document.getElementById('inputStartDate').value;
         const endDate = document.getElementById('inputEndDate').value;
@@ -753,20 +822,22 @@
           if (idx !== -1) {
             appData.habits[idx] = {
               ...appData.habits[idx],
-              name, unit, step, dailyGoal: goal, color, note,
+              name, unit, step, dailyGoal: goal, color, note, icon,
               repeatMode: mode,
               daysOfWeek: mode === 'weekly' ? daysOfWeek : null,
               monthDays: mode === 'monthly' ? monthDays : null,
+              intervalDays: mode === 'interval' ? intervalDays : null,
               startDate, endDate
             };
           }
         } else {
           const newHabit = {
             id: Date.now().toString(),
-            name, unit, step, dailyGoal: goal, color, note,
+            name, unit, step, dailyGoal: goal, color, note, icon,
             repeatMode: mode,
             daysOfWeek: mode === 'weekly' ? daysOfWeek : null,
             monthDays: mode === 'monthly' ? monthDays : null,
+            intervalDays: mode === 'interval' ? intervalDays : null,
             startDate, endDate,
             todayCount: 0
           };
