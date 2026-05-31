@@ -86,8 +86,11 @@
     .cal-day.today { background:#e8f5e9; }
     .cal-day.today .day-num { color:var(--theme); font-weight:bold; }
     .day-num { color:#333; }
-    .day-dots { display:flex; gap:2px; margin-top:2px; }
-    .dot { width:7px; height:7px; border-radius:50%; }
+    .day-dots {
+      display:flex; flex-wrap:wrap; justify-content:center;
+      gap:1px; margin-top:2px; max-width:100%;
+    }
+    .dot { width:5px; height:5px; border-radius:50%; }
 
     .streak-box {
       background:white; border-radius:14px; padding:14px; margin-top:12px;
@@ -270,13 +273,16 @@
   <script>
     (function(){
       const STORAGE_KEY = 'habit_data';
+      // 50种不重复颜色
       const PRESET_COLORS = [
         '#4CAF50','#2196F3','#FF9800','#E91E63','#9C27B0','#607D8B','#FF5722','#009688',
         '#795548','#CDDC39','#00BCD4','#8BC34A','#FFC107','#03A9F4','#673AB7','#F44336',
-        '#3F51B5','#009688','#FFEB3B','#FF9800','#795548','#9E9E9E','#00E676','#FF4081',
-        '#536DFE','#FF6E40','#1DE9B6','#FFD740','#7C4DFF','#B2FF59'
+        '#3F51B5','#FFEB3B','#9E9E9E','#00E676','#FF4081','#536DFE','#FF6E40','#1DE9B6',
+        '#FFD740','#7C4DFF','#B2FF59','#FF1744','#2979FF','#00E5FF','#FF6D00','#AA00FF',
+        '#00C853','#6200EA','#AEEA00','#FFAB00','#D50000','#304FFE','#64DD17','#FF3D00',
+        '#0091EA','#C51162','#00BFA5','#F50057','#651FFF','#1B5E20','#BF360C','#311B92',
+        '#004D40','#DD2C00'
       ];
-      // 预设常用 emoji
       const PRESET_EMOJIS = [
         '💧','🥤','🧊','☕','🍵','🥛','🧃',
         '🏃','🚶','🚴','🏋️','🤸','🧘','🏊','⚽','🏀','🎾',
@@ -300,7 +306,6 @@
       function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
       let appData = loadData();
-      // 数据兼容升级
       appData.habits = appData.habits || [];
       appData.habits.forEach(h => {
         h.repeatMode = h.repeatMode || 'daily';
@@ -335,13 +340,11 @@
       function applyTheme(color) { document.documentElement.style.setProperty('--theme', color); }
       applyTheme(appData.theme);
 
-      // ========== 工具函数 ==========
       function parseDate(str) { return str ? new Date(str.replace(/-/g,'/')) : null; }
       function formatDate(date) {
         return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
       }
 
-      // 判断某习惯在某天是否应该出现
       function isHabitDay(habit, dateStr) {
         const date = parseDate(dateStr);
         if (!date) return false;
@@ -371,7 +374,6 @@
         return habit && count >= habit.dailyGoal;
       }
 
-      // 计算连续完成天数
       function calcStreak(habit) {
         let streak = 0;
         const today = getToday();
@@ -404,7 +406,6 @@
         return streak;
       }
 
-      // ========== 视图切换 ==========
       let currentEditingId = null;
       let currentCalendarYear, currentCalendarMonth;
 
@@ -422,7 +423,6 @@
         tab.addEventListener('click', () => switchView(tab.dataset.view));
       });
 
-      // ========== 打卡视图 ==========
       function getFilteredHabits() {
         const today = getToday();
         return appData.habits.filter(h => isHabitDay(h, today));
@@ -509,7 +509,6 @@
         renderCheck();
       }
 
-      // ========== 日历视图 ==========
       function renderCalendar() {
         const now = new Date();
         if (!currentCalendarYear) {
@@ -544,7 +543,6 @@
         }
         html += '</div>';
 
-        // 连续完成统计
         html += '<div class="streak-box"><div class="streak-title">🔥 连续达标</div>';
         const streakList = appData.habits.map(h => ({ habit: h, streak: calcStreak(h) })).filter(s => s.streak > 0);
         if (streakList.length === 0) {
@@ -632,7 +630,6 @@
         if (document.getElementById('view-check').classList.contains('active')) renderCheck();
       }
 
-      // ========== 设置视图 ==========
       function renderSettings() {
         let html = '';
         PRESET_COLORS.forEach(c => {
@@ -654,7 +651,7 @@
               ${h.icon ? `<span class="habit-icon">${h.icon}</span>` : ''}
               <span class="habit-color-dot" style="background:${h.color || appData.theme}"></span>${escapeHtml(h.name)}${h.note ? ' <span style="color:#888;font-size:12px;">' + escapeHtml(h.note) + '</span>' : ''}
             </div>
-            <span style="color:#999;font-size:13px;">${repeatText} ${h.startDate ? '起' : ''}</span>
+            <span style="color:#999;font-size:13px;">${repeatText}</span>
           </div>`;
         });
         document.getElementById('habitListSettings').innerHTML = habitHtml;
@@ -677,7 +674,6 @@
         if (document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
       }
 
-      // ========== 习惯编辑弹窗 ==========
       function openHabitDialog(id) {
         currentEditingId = id;
         const habit = id ? appData.habits.find(h => h.id === id) : null;
@@ -691,10 +687,8 @@
         document.getElementById('inputColor').value = selColor;
         document.getElementById('btnDelete').style.display = habit ? 'block' : 'none';
 
-        // 图标设置
         const currentIcon = habit ? (habit.icon || '') : '';
         document.getElementById('inputIcon').value = currentIcon;
-        // 渲染 emoji 选择面板
         let emojiHtml = '';
         PRESET_EMOJIS.forEach(em => {
           emojiHtml += `<div class="emoji-btn${currentIcon === em ? ' selected' : ''}" data-emoji="${em}">${em}</div>`;
@@ -708,7 +702,6 @@
             this.classList.add('selected');
           });
         });
-        // 手动输入同步
         document.getElementById('inputIcon').addEventListener('input', function() {
           const val = this.value.trim();
           document.querySelectorAll('.emoji-btn').forEach(b => {
@@ -717,7 +710,6 @@
           });
         });
 
-        // 颜色选择
         let colorHtml = '';
         PRESET_COLORS.forEach(c => {
           colorHtml += `<div class="color-block${selColor === c ? ' selected' : ''}" style="background:${c}" data-color="${c}">${selColor === c ? '<span class="color-check">✓</span>' : ''}</div>`;
@@ -732,13 +724,11 @@
           });
         });
 
-        // 重复模式
         const currentMode = habit ? habit.repeatMode : 'daily';
         document.querySelectorAll('#repeatModeSelect .mode-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector(`.mode-btn[data-mode="${currentMode}"]`).classList.add('active');
         updateRepeatModeUI(currentMode);
 
-        // 星期按钮
         const daysOfWeek = (habit && habit.daysOfWeek) ? habit.daysOfWeek : [0,1,2,3,4,5,6];
         let weekHtml = '';
         WEEK_LABELS.forEach((label, index) => {
@@ -752,16 +742,12 @@
           });
         });
 
-        // 每月几号
         document.getElementById('inputMonthDays').value = habit && habit.monthDays ? habit.monthDays.join(',') : '1';
-        // 间隔天数
         document.getElementById('inputInterval').value = (habit && habit.intervalDays) ? habit.intervalDays : 2;
 
-        // 开始/结束日期
         document.getElementById('inputStartDate').value = habit ? (habit.startDate || getToday()) : getToday();
         document.getElementById('inputEndDate').value = habit ? (habit.endDate || '') : '';
 
-        // 模式切换事件
         document.querySelectorAll('#repeatModeSelect .mode-btn').forEach(btn => {
           btn.onclick = function() {
             document.querySelectorAll('#repeatModeSelect .mode-btn').forEach(b => b.classList.remove('active'));
